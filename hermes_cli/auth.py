@@ -996,8 +996,8 @@ def _merge_pool_row_generation(
 ) -> dict[str, Any]:
     """Keep a newer on-disk token generation authoritative during stale writes.
 
-    Only a terminal auth verdict (``last_status == dead``) is scoped to the token pair
-    it was observed on; account-wide cooldowns (402 billing, 429 throttle) from the
+    Only a token-scoped verdict (``last_status == dead``, or a 401/403 bench) is scoped to the token
+    pair it was observed on; account-wide cooldowns (402 billing, 429 throttle) from the
     stale writer still apply to the rotated pair and go through the ordinary recency
     merge in ``_merge_disk_cooldown_state``."""
     from agent.credential_pool import STATUS_DEAD
@@ -1019,7 +1019,7 @@ def _merge_pool_row_generation(
                 merged.pop(field, None)
 
     _take_from_disk(_POOL_TOKEN_GENERATION_FIELDS)
-    if not status_cleared and entry.get("last_status") == STATUS_DEAD:
+    if not status_cleared and (entry.get("last_status") == STATUS_DEAD or (entry.get("last_error_code") in (401, 403) and entry.get("failure_reason") != "billing")):
         _take_from_disk((*_POOL_STATUS_FIELDS, "failure_reason"))
     return _merge_disk_cooldown_state(merged, merge_disk, provider_id)
 

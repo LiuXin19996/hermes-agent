@@ -86,7 +86,7 @@ def pool_cooldown_message(provider_id: str) -> Optional[str]:
     which = ("its only credential is" if len(live) == 1
              else f"all {len(live)} credentials are")
     codes = {e.last_error_code for e in live}
-    cause, remedy = _bench_cause(sorted(c for c in codes if c), None in codes or 0 in codes, provider_id)
+    cause, remedy = _bench_cause(sorted(c for c in codes if c), None in codes, provider_id)
     return (f"Provider '{provider_id}' is set in config.yaml but {which} cooling down after "
             f"{cause}; the next one resets at {when}. {remedy}, or switch to a different provider "
             "with `hermes model`.")
